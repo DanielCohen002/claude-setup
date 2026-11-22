@@ -17,7 +17,7 @@ param(
   [string]$ClaudeExe,
   [string]$StartingDirectory = $env:USERPROFILE,
   [switch]$SkipPlugin,
-  [switch]$SkipRemoteControl,
+  [switch]$SkipPreferences,
   [switch]$SkipTrust
 )
 $ErrorActionPreference = 'Stop'
@@ -121,16 +121,21 @@ if (-not $SkipPlugin) {
   if ($LASTEXITCODE -ne 0) { Write-Warning "Plugin install failed. Run: claude plugin install easy-tracking --marketplace $repo" }
 }
 
-# Turn Remote Control on for all sessions (same as /config > Enable Remote Control for all sessions)
-if (-not $SkipRemoteControl) {
+# Claude preferences (same as setting them in /config). Written to ~/.claude/settings.json; other settings are kept.
+if (-not $SkipPreferences) {
+  $prefs = [ordered]@{
+    remoteControlAtStartup = $true    # Enable Remote Control for all sessions
+    awaySummaryEnabled     = $false   # Session recap off
+    agentPushNotifEnabled  = $true    # Push notifications on
+  }
   $settingsFile = Join-Path $env:USERPROFILE '.claude\settings.json'
   try {
     $us = if (Test-Path $settingsFile) { Get-Content $settingsFile -Raw | ConvertFrom-Json } else { [pscustomobject]@{} }
     if ($null -eq $us) { $us = [pscustomobject]@{} }
-    $us | Add-Member -NotePropertyName remoteControlAtStartup -NotePropertyValue $true -Force
+    foreach ($k in $prefs.Keys) { $us | Add-Member -NotePropertyName $k -NotePropertyValue $prefs[$k] -Force }
     New-Item (Split-Path $settingsFile) -ItemType Directory -Force | Out-Null
     $us | ConvertTo-Json -Depth 10 | Set-Content $settingsFile -Encoding utf8
-  } catch { Write-Warning "Could not enable Remote Control by default: $($_.Exception.Message)" }
+  } catch { Write-Warning "Could not write Claude preferences: $($_.Exception.Message)" }
 }
 
 # Mark the starting directory as trusted so Claude does not ask the "Quick safety check" every time.

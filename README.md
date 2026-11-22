@@ -29,6 +29,8 @@ Requires Windows 10/11, PowerShell 5.1+, and the `claude` CLI installed (found o
 | **Rename tab: `Ctrl+Shift+R`** | Renames the current tab. |
 | **Copy and paste** | `Ctrl+C` copies when text is selected (otherwise it interrupts Claude as usual). `Ctrl+V` pastes. `Ctrl+Shift+C` and `Ctrl+Shift+V` also work. |
 | **Remote Control always on** | Every session connects to Remote Control automatically (the same as `/config` → Enable Remote Control for all sessions). |
+| **Session recap off** | Claude doesn't show the automatic recap when you come back to a session (`awaySummaryEnabled: false`). `/recap` still works on demand. |
+| **Push notifications on** | `agentPushNotifEnabled: true`. |
 | **No "Quick safety check"** | The starting folder is marked trusted, so Claude stops asking whether you trust it every time. |
 
 Notes:
@@ -42,7 +44,7 @@ Notes:
 2. Downloads the latest portable Windows Terminal into `wt-portable\`, writes its settings (a `Claude` profile, centered launch, and the shortcuts above), and patches the exe's embedded icon (`patch-icon.ps1`).
 3. Creates the Start Menu shortcut `Claude`, which runs `launch-claude.vbs` → `launch-claude.ps1` (sets the window's icon and AppUserModelID so the taskbar groups it separately).
 4. Installs the `easy-tracking` mod from this repo, and removes the old standalone `claude-easy-tracking` one if present.
-5. Turns on Remote Control for all sessions by setting `"remoteControlAtStartup": true` in `~/.claude/settings.json`. Your other settings are kept.
+5. Sets these Claude preferences in `~/.claude/settings.json` (your other settings are kept): `remoteControlAtStartup: true` (Remote Control for all sessions), `awaySummaryEnabled: false` (session recap off) and `agentPushNotifEnabled: true` (push notifications on).
 6. Marks the starting folder as trusted in `~/.claude.json`. It changes only that one value, after saving a backup as `.claude.json.setup-backup`.
 
 Options:
@@ -54,7 +56,7 @@ Options:
 | `-ClaudeExe <path>` | Path to `claude.exe` if it is not found automatically. |
 | `-StartingDirectory <dir>` | Folder new Claude tabs open in (default: your user profile). |
 | `-SkipPlugin` | Don't install the easy-tracking mod. |
-| `-SkipRemoteControl` | Don't turn on Remote Control for all sessions. |
+| `-SkipPreferences` | Don't change the Claude preferences in step 5 (Remote Control, recap, push notifications). |
 | `-SkipTrust` | Don't mark the starting folder as trusted. |
 
 After updating the portable terminal build, re-run `setup.ps1`.
