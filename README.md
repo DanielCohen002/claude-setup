@@ -4,6 +4,7 @@ One-run setup for a nicer Claude Code experience on Windows:
 
 - **Own taskbar icon and a Start Menu launcher.** A portable Windows Terminal whose taskbar icon is the one from your installed `claude.exe`, so Claude windows group separately from other terminals. The launcher opens with no console flash.
 - **Easy tracking.** The `easy-tracking` Claude Code mod: your prompts in a cyan **▶ YOU** box, the next steps Claude asks of you in a yellow **▶ YOUR TURN** box, a green finish timer with the clock time, and a ding when Claude finishes.
+- **Opens centered.** The Claude window opens in the middle of the screen.
 - **Keyboard shortcuts.** `Ctrl+Shift+N` opens a new Claude tab, `Ctrl+W` exits Claude with `/exit` and closes the tab, `Ctrl+Shift+R` renames it.
 
 > Unofficial. Not affiliated with or endorsed by Anthropic or Microsoft. This repo contains **no** Anthropic artwork and **no** Windows Terminal binaries: the icon is extracted from your own installed `claude.exe` at setup time (or you supply your own `.ico`), and Windows Terminal is downloaded from Microsoft's official GitHub releases.

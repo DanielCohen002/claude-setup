@@ -67,6 +67,7 @@ $guid = '{c1a0de00-0000-5000-8000-000000c1a0de}'
 $settings = [ordered]@{
   '$schema'      = 'https://aka.ms/terminal-profiles-schema'
   defaultProfile = $guid
+  centerOnLaunch = $true
   actions        = @(
     @{ id = 'User.newClaudeTab'; command = @{ action = 'newTab'; profile = $guid } },
     @{ id = 'User.renameTab';    command = 'openTabRenamer' },
