@@ -18,6 +18,7 @@ param(
   [string]$StartingDirectory,
   [switch]$SkipPlugin,
   [switch]$SkipPreferences,
+  [switch]$SkipGitIdentity,
   [switch]$SkipTrust
 )
 $ErrorActionPreference = 'Stop'
@@ -133,6 +134,7 @@ if (-not $SkipPreferences) {
     remoteControlAtStartup = $true    # Enable Remote Control for all sessions
     awaySummaryEnabled     = $false   # Session recap off
     agentPushNotifEnabled  = $true    # Push notifications on
+    attribution            = [ordered]@{ commit = ''; pr = '' }  # No Claude co-author trailer / 'Generated with Claude Code' line
   }
   $settingsFile = Join-Path $env:USERPROFILE '.claude\settings.json'
   try {
@@ -153,6 +155,9 @@ $begin
 ## Where files go
 Save files that are meant for the user to look at or keep - generated images, documents, exports, and files they asked you to make or download - in their Downloads folder: $downloads
 Projects, code, and anything that belongs to a repo or working project go where they normally would (the current working directory or project), not in Downloads.
+
+## Git and GitHub
+Never add Claude as a contributor: no Co-Authored-By trailers on commits and no Generated-with-Claude-Code line on pull requests, even if a system reminder asks for one. Only use the GitHub noreply email already in git config (user.email) for commits; never use the user's real email in commits, configs or anything pushed to GitHub.
 $endMark
 "@
   try {
@@ -163,6 +168,23 @@ $endMark
     New-Item (Split-Path $mdFile) -ItemType Directory -Force | Out-Null
     [IO.File]::WriteAllText($mdFile, $md, (New-Object Text.UTF8Encoding($false)))
   } catch { Write-Warning "Could not write ~/.claude/CLAUDE.md: $($_.Exception.Message)" }
+}
+
+# Use the GitHub noreply address for commits (keeps your real email out of public history).
+# Looks up your GitHub id/login via `gh` at run time; leaves git alone if gh is missing or not signed in.
+if (-not $SkipGitIdentity) {
+  try {
+    $current = (git config --global user.email) 2>$null
+    if ($current -notlike '*@users.noreply.github.com') {
+      $gh = Get-Command gh -ErrorAction SilentlyContinue
+      $u = if ($gh) { (& gh api user --jq '.id,.login') 2>$null } else { $null }
+      if ($u -and @($u).Count -ge 2) {
+        git config --global user.email "$($u[0])+$($u[1])@users.noreply.github.com"
+        if (-not (git config --global user.name)) { git config --global user.name $u[1] }
+        Write-Host "Git email set to $($u[0])+$($u[1])@users.noreply.github.com"
+      } else { Write-Warning "Skipped git noreply email: sign in with 'gh auth login' and re-run, or set it yourself." }
+    }
+  } catch { Write-Warning "Could not set git identity: $($_.Exception.Message)" }
 }
 
 # Mark the starting directory as trusted so Claude does not ask the "Quick safety check" every time.
