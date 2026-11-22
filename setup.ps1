@@ -78,8 +78,9 @@ $settings | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $settingsDir 'setti
 # Start Menu shortcut that runs the launcher
 $lnk = Join-Path ([Environment]::GetFolderPath('Programs')) 'Claude.lnk'
 $sh = (New-Object -ComObject WScript.Shell).CreateShortcut($lnk)
-$sh.TargetPath = (Get-Command powershell.exe).Source
-$sh.Arguments = "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$(Join-Path $root 'launch-claude.ps1')`""
+# wscript + .vbs starts the launcher with no console window (no flash)
+$sh.TargetPath = Join-Path $env:WINDIR 'System32\wscript.exe'
+$sh.Arguments = "`"$(Join-Path $root 'launch-claude.vbs')`""
 $sh.IconLocation = $ico
 $sh.WorkingDirectory = $root
 $sh.Save()
