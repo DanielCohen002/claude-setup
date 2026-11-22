@@ -94,6 +94,7 @@ $sh.WorkingDirectory = $root
 $sh.Save()
 # easy-tracking mod (YOU / YOUR TURN boxes, green finish timer, ding)
 if (-not $SkipPlugin) {
+  $ErrorActionPreference = 'Continue'  # cleanup calls below may report "not found"
   $repo = 'DanielCohen002/claude-setup'
   # Migrate off the old standalone marketplace if it is still installed
   & $ClaudeExe plugin uninstall easy-tracking@claude-easy-tracking 2>&1 | Out-Null
