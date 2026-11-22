@@ -15,15 +15,20 @@ param(
   [string]$IconPath,
   [string]$TerminalZip,
   [string]$ClaudeExe,
-  [string]$StartingDirectory = $env:USERPROFILE
+  [string]$StartingDirectory = $env:USERPROFILE,
+  [switch]$SkipPlugin
 )
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 
 if (-not $ClaudeExe) {
   $cmd = Get-Command claude -ErrorAction SilentlyContinue
-  if (-not $cmd) { throw "claude not found on PATH. Pass -ClaudeExe." }
-  $ClaudeExe = $cmd.Source
+  if ($cmd) { $ClaudeExe = $cmd.Source }
+  else {
+    $default = Join-Path $env:USERPROFILE '.local\bin\claude.exe'
+    if (Test-Path $default) { $ClaudeExe = $default }
+    else { throw "claude not found on PATH or at $default. Pass -ClaudeExe." }
+  }
 }
 $ico = Join-Path $root 'icon.ico'
 if ($IconPath) {
@@ -57,11 +62,14 @@ $settings = [ordered]@{
   defaultProfile = $guid
   actions        = @(
     @{ id = 'User.newClaudeTab'; command = @{ action = 'newTab'; profile = $guid } },
-    @{ id = 'User.renameTab';    command = 'openTabRenamer' }
+    @{ id = 'User.renameTab';    command = 'openTabRenamer' },
+    @{ id = 'User.closeClaudeTab'; command = @{ action = 'closeTab' } }
   )
   keybindings    = @(
-    @{ id = 'User.newClaudeTab'; keys = 'ctrl+shift+t' },
-    @{ id = 'User.renameTab';    keys = 'ctrl+shift+r' }
+    @{ id = 'User.newClaudeTab';   keys = 'ctrl+shift+n' },
+    @{ id = 'User.newClaudeTab';   keys = 'ctrl+shift+t' },
+    @{ id = 'User.closeClaudeTab'; keys = 'ctrl+w' },
+    @{ id = 'User.renameTab';      keys = 'ctrl+shift+r' }
   )
   profiles       = @{ list = @(@{
     guid = $guid; name = 'Claude'; hidden = $false
@@ -84,4 +92,17 @@ $sh.Arguments = "`"$(Join-Path $root 'launch-claude.vbs')`""
 $sh.IconLocation = $ico
 $sh.WorkingDirectory = $root
 $sh.Save()
+# easy-tracking mod (YOU / YOUR TURN boxes, green finish timer, ding)
+if (-not $SkipPlugin) {
+  $repo = 'DanielCohen002/claude-setup'
+  # Migrate off the old standalone marketplace if it is still installed
+  & $ClaudeExe plugin uninstall easy-tracking@claude-easy-tracking 2>&1 | Out-Null
+  & $ClaudeExe plugin marketplace remove claude-easy-tracking 2>&1 | Out-Null
+  # Refresh if already installed, otherwise install
+  & $ClaudeExe plugin uninstall easy-tracking@claude-setup 2>&1 | Out-Null
+  & $ClaudeExe plugin marketplace remove claude-setup 2>&1 | Out-Null
+  & $ClaudeExe plugin install easy-tracking --marketplace $repo -y
+  if ($LASTEXITCODE -ne 0) { Write-Warning "Plugin install failed. Run: claude plugin install easy-tracking --marketplace $repo" }
+}
+
 Write-Host "Done. Launch 'Claude' from the Start Menu."
