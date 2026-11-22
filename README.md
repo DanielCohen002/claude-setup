@@ -23,6 +23,7 @@ Requires Windows 10/11, PowerShell 5.1+, and the `claude` CLI installed (found o
 | **Its own taskbar icon** | Claude opens in a portable Windows Terminal that uses the icon from your installed `claude.exe`, so Claude windows are grouped separately from your other terminals. |
 | **Start Menu launcher** | A `Claude` shortcut that opens straight into Claude, with no console window flashing first. |
 | **Opens centered** | The window opens in the middle of your screen instead of the corner. |
+| **Files go to Downloads** | Claude starts in your Downloads folder, and a rule in `~/.claude/CLAUDE.md` tells it to save anything it downloads or creates there, unless you or a project say otherwise. |
 | **Easy tracking** | The `easy-tracking` mod makes long conversations easy to follow (details below). |
 | **New tab: `Ctrl+Shift+N`** | Opens a new Claude tab. `Ctrl+Shift+T` does the same. |
 | **Exit: `Ctrl+W`** | Types `/exit` and presses Enter, so Claude exits cleanly and the tab closes. |
@@ -36,7 +37,7 @@ Requires Windows 10/11, PowerShell 5.1+, and the `claude` CLI installed (found o
 Notes:
 
 - `Ctrl+W` is handled by Windows Terminal, so it does not reach Claude's prompt (where it would delete a word). It types `/exit` into whatever has focus, so use it at Claude's prompt. If Claude is mid-response the `/exit` is queued, and in a non-Claude program it just types `/exit`.
-- Trusting a folder lets Claude load that folder's project settings, hooks and MCP servers. The starting folder is your user profile by default; change it with `-StartingDirectory`, or skip this with `-SkipTrust`.
+- Trusting a folder lets Claude load that folder's project settings, hooks and MCP servers. The starting folder is your Downloads folder by default; change it with `-StartingDirectory`, or skip this with `-SkipTrust`. Claude generally treats a trusted folder's subfolders as trusted too, and Downloads is where downloaded files (including cloned or unzipped projects) end up, so only keep this on if you are comfortable with that.
 
 ## What `setup.ps1` does
 
@@ -44,7 +45,7 @@ Notes:
 2. Downloads the latest portable Windows Terminal into `wt-portable\`, writes its settings (a `Claude` profile, centered launch, and the shortcuts above), and patches the exe's embedded icon (`patch-icon.ps1`).
 3. Creates the Start Menu shortcut `Claude`, which runs `launch-claude.vbs` → `launch-claude.ps1` (sets the window's icon and AppUserModelID so the taskbar groups it separately).
 4. Installs the `easy-tracking` mod from this repo, and removes the old standalone `claude-easy-tracking` one if present.
-5. Sets these Claude preferences in `~/.claude/settings.json` (your other settings are kept): `remoteControlAtStartup: true` (Remote Control for all sessions), `awaySummaryEnabled: false` (session recap off) and `agentPushNotifEnabled: true` (push notifications on).
+5. Sets these Claude preferences in `~/.claude/settings.json` (your other settings are kept): `remoteControlAtStartup: true` (Remote Control for all sessions), `awaySummaryEnabled: false` (session recap off) and `agentPushNotifEnabled: true` (push notifications on). It also adds a marked "Where files go" block to `~/.claude/CLAUDE.md` (rest of the file is left alone; re-running updates the block) so Claude saves downloads and files it creates in your Downloads folder.
 6. Marks the starting folder as trusted in `~/.claude.json`. It changes only that one value, after saving a backup as `.claude.json.setup-backup`.
 
 Options:
@@ -54,9 +55,9 @@ Options:
 | `-IconPath <file.ico>` | Use your own icon instead of the one in `claude.exe`. |
 | `-TerminalZip <zip>` | Use a local portable Windows Terminal zip instead of downloading. |
 | `-ClaudeExe <path>` | Path to `claude.exe` if it is not found automatically. |
-| `-StartingDirectory <dir>` | Folder new Claude tabs open in (default: your user profile). |
+| `-StartingDirectory <dir>` | Folder new Claude tabs open in (default: your Downloads folder). |
 | `-SkipPlugin` | Don't install the easy-tracking mod. |
-| `-SkipPreferences` | Don't change the Claude preferences in step 5 (Remote Control, recap, push notifications). |
+| `-SkipPreferences` | Don't change the Claude preferences or the Downloads rule in step 5 (Remote Control, recap, push notifications, `CLAUDE.md`). |
 | `-SkipTrust` | Don't mark the starting folder as trusted. |
 
 After updating the portable terminal build, re-run `setup.ps1`.

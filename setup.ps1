@@ -9,13 +9,14 @@
 .PARAMETER ClaudeExe
   Optional path to claude.exe. Defaults to whatever `claude` resolves to on PATH.
 .PARAMETER StartingDirectory
-  Directory new Claude tabs open in. Defaults to your user profile.
+  Directory new Claude tabs open in. Defaults to your Downloads folder, so files Claude
+  downloads or creates land there.
 #>
 param(
   [string]$IconPath,
   [string]$TerminalZip,
   [string]$ClaudeExe,
-  [string]$StartingDirectory = $env:USERPROFILE,
+  [string]$StartingDirectory,
   [switch]$SkipPlugin,
   [switch]$SkipPreferences,
   [switch]$SkipTrust
@@ -37,6 +38,12 @@ if (-not $ClaudeExe) {
     else { throw "claude not found on PATH or at $default. Pass -ClaudeExe." }
   }
 }
+# Your real Downloads folder (follows OneDrive/redirected locations)
+$downloads = $null
+try { $downloads = (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path } catch {}
+if (-not $downloads) { $downloads = Join-Path $env:USERPROFILE 'Downloads' }
+if (-not $StartingDirectory) { $StartingDirectory = $downloads }
+
 $ico = Join-Path $root 'icon.ico'
 if ($IconPath) {
   if (-not (Test-Path $IconPath)) { throw "Icon not found: $IconPath" }
@@ -136,6 +143,26 @@ if (-not $SkipPreferences) {
     New-Item (Split-Path $settingsFile) -ItemType Directory -Force | Out-Null
     $us | ConvertTo-Json -Depth 10 | Set-Content $settingsFile -Encoding utf8
   } catch { Write-Warning "Could not write Claude preferences: $($_.Exception.Message)" }
+
+  # Tell Claude to put downloads and files it creates in Downloads. Lives in its own marked block in
+  # ~/.claude/CLAUDE.md so re-running updates it and anything else you wrote there is left alone.
+  $mdFile = Join-Path $env:USERPROFILE '.claude\CLAUDE.md'
+  $begin = '<!-- claude-setup:begin -->'; $endMark = '<!-- claude-setup:end -->'
+  $rule = @"
+$begin
+## Where files go
+Unless the user or an existing project says otherwise, save anything you download or create (scripts, documents, exports, downloaded files) in the Downloads folder: $downloads
+Do not scatter files in the home folder or other locations. Files that belong to a project or repo the user is working in stay in that project.
+$endMark
+"@
+  try {
+    $md = if (Test-Path $mdFile) { [IO.File]::ReadAllText($mdFile) } else { '' }
+    $pattern = '(?s)' + [regex]::Escape($begin) + '.*?' + [regex]::Escape($endMark)
+    if ($md -match $pattern) { $md = [regex]::Replace($md, $pattern, { param($m) $rule }) }
+    else { $md = $md.TrimEnd() + $(if ($md.Trim()) { "`r`n`r`n" } else { '' }) + $rule + "`r`n" }
+    New-Item (Split-Path $mdFile) -ItemType Directory -Force | Out-Null
+    [IO.File]::WriteAllText($mdFile, $md, (New-Object Text.UTF8Encoding($false)))
+  } catch { Write-Warning "Could not write ~/.claude/CLAUDE.md: $($_.Exception.Message)" }
 }
 
 # Mark the starting directory as trusted so Claude does not ask the "Quick safety check" every time.
