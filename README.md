@@ -4,7 +4,7 @@ One-run setup for a nicer Claude Code experience on Windows:
 
 - **Own taskbar icon and a Start Menu launcher.** A portable Windows Terminal whose taskbar icon is the one from your installed `claude.exe`, so Claude windows group separately from other terminals. The launcher opens with no console flash.
 - **Easy tracking.** The `easy-tracking` Claude Code mod: your prompts in a cyan **▶ YOU** box, the next steps Claude asks of you in a yellow **▶ YOUR TURN** box, a green finish timer with the clock time, and a ding when Claude finishes.
-- **Keyboard shortcuts.** `Ctrl+Shift+N` opens a new Claude tab, `Ctrl+W` closes the tab, `Ctrl+Shift+R` renames it.
+- **Keyboard shortcuts.** `Ctrl+Shift+N` opens a new Claude tab, `Ctrl+W` exits Claude with `/exit` and closes the tab, `Ctrl+Shift+R` renames it.
 
 > Unofficial. Not affiliated with or endorsed by Anthropic or Microsoft. This repo contains **no** Anthropic artwork and **no** Windows Terminal binaries: the icon is extracted from your own installed `claude.exe` at setup time (or you supply your own `.ico`), and Windows Terminal is downloaded from Microsoft's official GitHub releases.
 
@@ -34,10 +34,10 @@ After updating the portable build, re-run `setup.ps1`.
 | Keys | Action |
 | --- | --- |
 | `Ctrl+Shift+N` (also `Ctrl+Shift+T`) | New Claude tab |
-| `Ctrl+W` | Close the current tab (the window closes with the last tab) |
+| `Ctrl+W` | Types `/exit` and presses Enter in the current tab, so Claude exits cleanly and the tab closes (the window closes with the last tab) |
 | `Ctrl+Shift+R` | Rename the tab |
 
-`Ctrl+W` is handled by Windows Terminal, so it does not reach Claude's prompt (where it would delete a word).
+`Ctrl+W` is handled by Windows Terminal, so it does not reach Claude's prompt (where it would delete a word). It sends text to whatever has focus, so use it at Claude's prompt; if Claude is mid-response the `/exit` is queued, and in a non-Claude program it just types `/exit`.
 
 ## easy-tracking mod
 

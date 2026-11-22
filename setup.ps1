@@ -21,6 +21,11 @@ param(
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 
+# Refuse to reinstall over a running portable terminal (would leave a half-deleted install)
+$running = Get-Process WindowsTerminal -ErrorAction SilentlyContinue |
+  Where-Object { $_.Path -and $_.Path -like "$(Join-Path $root 'wt-portable')*" }
+if ($running) { throw "The portable Claude terminal is open. Close all Claude windows, then run setup.ps1 again." }
+
 if (-not $ClaudeExe) {
   $cmd = Get-Command claude -ErrorAction SilentlyContinue
   if ($cmd) { $ClaudeExe = $cmd.Source }
@@ -63,16 +68,16 @@ $settings = [ordered]@{
   actions        = @(
     @{ id = 'User.newClaudeTab'; command = @{ action = 'newTab'; profile = $guid } },
     @{ id = 'User.renameTab';    command = 'openTabRenamer' },
-    @{ id = 'User.closeClaudeTab'; command = @{ action = 'closeTab' } }
+    @{ id = 'User.exitClaude'; command = @{ action = 'sendInput'; input = "/exit`r" } }
   )
   keybindings    = @(
     @{ id = 'User.newClaudeTab';   keys = 'ctrl+shift+n' },
     @{ id = 'User.newClaudeTab';   keys = 'ctrl+shift+t' },
-    @{ id = 'User.closeClaudeTab'; keys = 'ctrl+w' },
+    @{ id = 'User.exitClaude';     keys = 'ctrl+w' },
     @{ id = 'User.renameTab';      keys = 'ctrl+shift+r' }
   )
   profiles       = @{ list = @(@{
-    guid = $guid; name = 'Claude'; hidden = $false
+    guid = $guid; name = 'Claude'; hidden = $false; closeOnExit = 'graceful'
     commandline = ($ClaudeExe.Replace([string][char]92, '/'))
     icon = ($ico.Replace([string][char]92, '/'))
     startingDirectory = ($StartingDirectory.Replace([string][char]92, '/'))
