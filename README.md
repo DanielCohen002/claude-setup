@@ -18,21 +18,38 @@ Requires Windows 10/11, PowerShell 5.1+, and the `claude` CLI installed (found o
 
 ## What you get
 
-| Feature | What it does |
+**A dedicated Claude window**
+- Its own taskbar icon: Claude runs in a portable Windows Terminal that uses the icon from your installed `claude.exe`, so it's grouped apart from your other terminals.
+- A `Claude` Start Menu launcher that opens straight into Claude with no console flash, centered on screen.
+
+**Shortcuts**
+
+| Key | Action |
 | --- | --- |
-| **Its own taskbar icon** | Claude opens in a portable Windows Terminal that uses the icon from your installed `claude.exe`, so Claude windows are grouped separately from your other terminals. |
-| **Start Menu launcher** | A `Claude` shortcut that opens straight into Claude, with no console window flashing first. |
-| **Opens centered** | The window opens in the middle of your screen instead of the corner. |
-| **Files for you go to Downloads** | A rule in `~/.claude/CLAUDE.md` tells Claude to save things meant for you to look at (generated images, documents, files you asked for) in your Downloads folder. Projects and code still go where they normally would. |
-| **Easy tracking** | The `easy-tracking` mod makes long conversations easy to follow (details below). |
-| **New tab: `Ctrl+Shift+N`** | Opens a new Claude tab. `Ctrl+Shift+T` does the same. |
-| **Exit: `Ctrl+W`** | Types `/exit` and presses Enter, so Claude exits cleanly and the tab closes. |
-| **Rename tab: `Ctrl+Shift+R`** | Renames the current tab. |
-| **Copy and paste** | `Ctrl+C` copies when text is selected (otherwise it interrupts Claude as usual). `Ctrl+V` pastes. `Ctrl+Shift+C` and `Ctrl+Shift+V` also work. |
-| **Remote Control always on** | Every session connects to Remote Control automatically (the same as `/config` → Enable Remote Control for all sessions). |
-| **Session recap off** | Claude doesn't show the automatic recap when you come back to a session (`awaySummaryEnabled: false`). `/recap` still works on demand. |
-| **Push notifications on** | `agentPushNotifEnabled: true`. |
-| **No "Quick safety check"** | The starting folder is marked trusted, so Claude stops asking whether you trust it every time. |
+| `Ctrl+Shift+N` / `Ctrl+Shift+T` | New Claude tab |
+| `Ctrl+W` | Types `/exit` and presses Enter, so Claude exits cleanly and the tab closes |
+| `Ctrl+Shift+R` | Rename the current tab |
+| `Ctrl+C` / `Ctrl+V` | Copy (when text is selected; otherwise it interrupts Claude as usual) / paste. `Ctrl+Shift+C` and `Ctrl+Shift+V` also work |
+
+**Easy tracking** (the `easy-tracking` mod, details below)
+- Your prompts and the steps Claude needs from you are drawn in highlighted boxes.
+- A green "done" timer and a ding tell you when Claude has finished.
+
+**Claude preferences** (set in `~/.claude/settings.json`; your other settings are kept)
+- Remote Control on for every session.
+- Session recap off (`/recap` still works on demand).
+- Push notifications on.
+- No Claude co-author trailer on commits and no "Generated with Claude Code" line on PRs.
+- No "Quick safety check": the starting folder is marked trusted.
+
+**Rules for Claude** (a marked block in `~/.claude/CLAUDE.md`; the rest of the file is left alone)
+- Files meant for you (generated images, documents, files you asked for) are saved in your Downloads folder; projects and code stay where they normally go.
+- Claude never adds itself as a contributor and never uses your real email in commits.
+
+**Git identity**
+- Your global git email is set to your GitHub noreply address (`<id>+<login>@users.noreply.github.com`) so your real email stays out of public history. Needs `gh auth login`; skipped if it's already a noreply address.
+
+Every part can be turned off with the options below.
 
 Notes:
 
