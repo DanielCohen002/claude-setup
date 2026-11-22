@@ -2,7 +2,8 @@
 .SYNOPSIS
   Sets up a portable Windows Terminal with a custom icon and a "Claude Code" profile.
 .PARAMETER IconPath
-  Path to a .ico file YOU supply (multi-size recommended: 16/32/48/256).
+  Optional path to a .ico file YOU supply (multi-size recommended: 16/32/48/256).
+  If omitted, the icon embedded in claude.exe is extracted and used.
 .PARAMETER TerminalZip
   Optional local Windows Terminal portable zip (x64). If omitted, the latest is downloaded from GitHub.
 .PARAMETER ClaudeExe
@@ -11,7 +12,7 @@
   Directory new Claude tabs open in. Defaults to your user profile.
 #>
 param(
-  [Parameter(Mandatory)][string]$IconPath,
+  [string]$IconPath,
   [string]$TerminalZip,
   [string]$ClaudeExe,
   [string]$StartingDirectory = $env:USERPROFILE
@@ -24,9 +25,13 @@ if (-not $ClaudeExe) {
   if (-not $cmd) { throw "claude not found on PATH. Pass -ClaudeExe." }
   $ClaudeExe = $cmd.Source
 }
-if (-not (Test-Path $IconPath)) { throw "Icon not found: $IconPath" }
-Copy-Item $IconPath (Join-Path $root 'icon.ico') -Force
 $ico = Join-Path $root 'icon.ico'
+if ($IconPath) {
+  if (-not (Test-Path $IconPath)) { throw "Icon not found: $IconPath" }
+  Copy-Item $IconPath $ico -Force
+} else {
+  & (Join-Path $root 'extract-icon.ps1') -Exe $ClaudeExe -Out $ico
+}
 
 if (-not $TerminalZip) {
   $rel = Invoke-RestMethod 'https://api.github.com/repos/microsoft/terminal/releases/latest' -Headers @{ 'User-Agent' = 'setup' }

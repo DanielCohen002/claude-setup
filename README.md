@@ -2,15 +2,21 @@
 
 Scripts that set up a **portable Windows Terminal** with a custom taskbar icon and a dedicated profile that launches the `claude` CLI, so your Claude sessions get their own icon instead of sharing the generic terminal one.
 
-> Unofficial. Not affiliated with or endorsed by Anthropic or Microsoft. This repo contains **no** Anthropic artwork and **no** Windows Terminal binaries: you supply your own `.ico`, and Windows Terminal is downloaded from Microsoft's official GitHub releases at setup time.
+> Unofficial. Not affiliated with or endorsed by Anthropic or Microsoft. This repo contains **no** Anthropic artwork and **no** Windows Terminal binaries: the icon is extracted from your own installed `claude.exe` at setup time (or you supply your own `.ico`), and Windows Terminal is downloaded from Microsoft's official GitHub releases at setup time.
 
 ## Use
+
+```powershell
+.\setup.ps1
+```
+
+This uses the icon already embedded in `claude.exe`. To use your own icon instead:
 
 ```powershell
 .\setup.ps1 -IconPath C:\path\to\your-icon.ico
 ```
 
-Optional: `-TerminalZip` (use a local portable zip), `-ClaudeExe`, `-StartingDirectory`.
+Optional: `-IconPath`, `-TerminalZip` (use a local portable zip), `-ClaudeExe`, `-StartingDirectory`.
 
 This downloads the latest portable Windows Terminal into `wt-portable\`, writes a settings file with a `Claude` profile, patches the exe's embedded icon, and creates a Start Menu shortcut `Claude`.
 
