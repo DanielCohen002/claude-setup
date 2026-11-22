@@ -9,8 +9,7 @@
 .PARAMETER ClaudeExe
   Optional path to claude.exe. Defaults to whatever `claude` resolves to on PATH.
 .PARAMETER StartingDirectory
-  Directory new Claude tabs open in. Defaults to your Downloads folder, so files Claude
-  downloads or creates land there.
+  Directory new Claude tabs open in. Defaults to your user profile.
 #>
 param(
   [string]$IconPath,
@@ -42,7 +41,7 @@ if (-not $ClaudeExe) {
 $downloads = $null
 try { $downloads = (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path } catch {}
 if (-not $downloads) { $downloads = Join-Path $env:USERPROFILE 'Downloads' }
-if (-not $StartingDirectory) { $StartingDirectory = $downloads }
+if (-not $StartingDirectory) { $StartingDirectory = $env:USERPROFILE }
 
 $ico = Join-Path $root 'icon.ico'
 if ($IconPath) {
@@ -144,15 +143,16 @@ if (-not $SkipPreferences) {
     $us | ConvertTo-Json -Depth 10 | Set-Content $settingsFile -Encoding utf8
   } catch { Write-Warning "Could not write Claude preferences: $($_.Exception.Message)" }
 
-  # Tell Claude to put downloads and files it creates in Downloads. Lives in its own marked block in
-  # ~/.claude/CLAUDE.md so re-running updates it and anything else you wrote there is left alone.
+  # Tell Claude to put files meant for you to look at in Downloads (projects stay where they normally go).
+  # Lives in its own marked block in ~/.claude/CLAUDE.md so re-running updates it and anything else you
+  # wrote there is left alone.
   $mdFile = Join-Path $env:USERPROFILE '.claude\CLAUDE.md'
   $begin = '<!-- claude-setup:begin -->'; $endMark = '<!-- claude-setup:end -->'
   $rule = @"
 $begin
 ## Where files go
-Unless the user or an existing project says otherwise, save anything you download or create (scripts, documents, exports, downloaded files) in the Downloads folder: $downloads
-Do not scatter files in the home folder or other locations. Files that belong to a project or repo the user is working in stay in that project.
+Save files that are meant for the user to look at or keep - generated images, documents, exports, and files they asked you to make or download - in their Downloads folder: $downloads
+Projects, code, and anything that belongs to a repo or working project go where they normally would (the current working directory or project), not in Downloads.
 $endMark
 "@
   try {
