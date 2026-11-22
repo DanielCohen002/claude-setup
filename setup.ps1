@@ -68,13 +68,20 @@ $settings = [ordered]@{
   actions        = @(
     @{ id = 'User.newClaudeTab'; command = @{ action = 'newTab'; profile = $guid } },
     @{ id = 'User.renameTab';    command = 'openTabRenamer' },
-    @{ id = 'User.exitClaude'; command = @{ action = 'sendInput'; input = "/exit`r" } }
+    @{ id = 'User.exitClaude'; command = @{ action = 'sendInput'; input = "/exit`r" } },
+    @{ id = 'User.copy';       command = @{ action = 'copy'; singleLine = $false } },
+    @{ id = 'User.paste';      command = 'paste' }
   )
   keybindings    = @(
     @{ id = 'User.newClaudeTab';   keys = 'ctrl+shift+n' },
     @{ id = 'User.newClaudeTab';   keys = 'ctrl+shift+t' },
     @{ id = 'User.exitClaude';     keys = 'ctrl+w' },
-    @{ id = 'User.renameTab';      keys = 'ctrl+shift+r' }
+    @{ id = 'User.renameTab';      keys = 'ctrl+shift+r' },
+    # Copy / paste (Ctrl+C only copies when text is selected; otherwise it interrupts Claude as usual)
+    @{ id = 'User.copy';           keys = 'ctrl+c' },
+    @{ id = 'User.copy';           keys = 'ctrl+shift+c' },
+    @{ id = 'User.paste';          keys = 'ctrl+v' },
+    @{ id = 'User.paste';          keys = 'ctrl+shift+v' }
   )
   profiles       = @{ list = @(@{
     guid = $guid; name = 'Claude'; hidden = $false; closeOnExit = 'graceful'
