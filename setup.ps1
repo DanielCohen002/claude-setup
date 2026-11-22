@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Sets up a portable Windows Terminal with a custom icon and a "Claude Code" profile.
 .PARAMETER IconPath
@@ -16,7 +16,9 @@ param(
   [string]$TerminalZip,
   [string]$ClaudeExe,
   [string]$StartingDirectory = $env:USERPROFILE,
-  [switch]$SkipPlugin
+  [switch]$SkipPlugin,
+  [switch]$SkipRemoteControl,
+  [switch]$SkipTrust
 )
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
@@ -118,4 +120,60 @@ if (-not $SkipPlugin) {
   if ($LASTEXITCODE -ne 0) { Write-Warning "Plugin install failed. Run: claude plugin install easy-tracking --marketplace $repo" }
 }
 
+# Turn Remote Control on for all sessions (same as /config > Enable Remote Control for all sessions)
+if (-not $SkipRemoteControl) {
+  $settingsFile = Join-Path $env:USERPROFILE '.claude\settings.json'
+  try {
+    $us = if (Test-Path $settingsFile) { Get-Content $settingsFile -Raw | ConvertFrom-Json } else { [pscustomobject]@{} }
+    if ($null -eq $us) { $us = [pscustomobject]@{} }
+    $us | Add-Member -NotePropertyName remoteControlAtStartup -NotePropertyValue $true -Force
+    New-Item (Split-Path $settingsFile) -ItemType Directory -Force | Out-Null
+    $us | ConvertTo-Json -Depth 10 | Set-Content $settingsFile -Encoding utf8
+  } catch { Write-Warning "Could not enable Remote Control by default: $($_.Exception.Message)" }
+}
+
+# Mark the starting directory as trusted so Claude does not ask the "Quick safety check" every time.
+# Edits only that one value in ~/.claude.json as text (no JSON re-serialization), after saving a backup.
+if (-not $SkipTrust) {
+  $cfgFile = Join-Path $env:USERPROFILE '.claude.json'
+  try {
+    if (Test-Path $cfgFile) {
+      $text = [IO.File]::ReadAllText($cfgFile)
+      $key  = ([IO.Path]::GetFullPath($StartingDirectory)).TrimEnd('\').Replace('\', '/')
+      $needle = '"' + $key + '"'
+      $at = $text.IndexOf($needle)
+      $out = $null
+      if ($at -ge 0) {
+        $open = $text.IndexOf('{', $at + $needle.Length)
+        # find the matching close brace, skipping over strings
+        $depth = 0; $inStr = $false; $close = -1
+        for ($i = $open; $i -lt $text.Length; $i++) {
+          $c = $text[$i]
+          if ($inStr) { if ($c -eq '\') { $i++ } elseif ($c -eq '"') { $inStr = $false } }
+          elseif ($c -eq '"') { $inStr = $true }
+          elseif ($c -eq '{') { $depth++ }
+          elseif ($c -eq '}') { $depth--; if ($depth -eq 0) { $close = $i; break } }
+        }
+        if ($open -ge 0 -and $close -gt $open) {
+          $block = $text.Substring($open, $close - $open + 1)
+          $re = '("hasTrustDialogAccepted"\s*:\s*)(true|false)'
+          if ($block -match $re) { $newBlock = [regex]::Replace($block, $re, '${1}true') }
+          else { $newBlock = '{ "hasTrustDialogAccepted": true,' + $block.Substring(1) }
+          if ($newBlock -ne $block) { $out = $text.Substring(0, $open) + $newBlock + $text.Substring($close + 1) }
+        }
+      } else {
+        $m = [regex]::Match($text, '"projects"\s*:\s*\{')
+        if ($m.Success) { $out = $text.Insert($m.Index + $m.Length, "`n    `"$key`": { `"hasTrustDialogAccepted`": true },") }
+      }
+      if ($out) {
+        Copy-Item $cfgFile "$cfgFile.setup-backup" -Force
+        [IO.File]::WriteAllText($cfgFile, $out, (New-Object Text.UTF8Encoding($false)))
+        $null = Get-Content $cfgFile -Raw | ConvertFrom-Json   # make sure it is still valid JSON
+      }
+    }
+  } catch {
+    Write-Warning "Could not pre-trust $StartingDirectory : $($_.Exception.Message)"
+    if (Test-Path "$cfgFile.setup-backup") { Copy-Item "$cfgFile.setup-backup" $cfgFile -Force }
+  }
+}
 Write-Host "Done. Launch 'Claude' from the Start Menu."

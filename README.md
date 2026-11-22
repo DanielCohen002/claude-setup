@@ -25,7 +25,11 @@ Then launch **Claude** from the Start Menu.
 3. Creates the Start Menu shortcut `Claude`, which runs `launch-claude.vbs` → `launch-claude.ps1` (sets the window's icon and AppUserModelID so the taskbar groups it separately).
 4. Installs the `easy-tracking` mod from this repo (and removes the old `claude-easy-tracking` one if present).
 
-Options: `-IconPath` (use your own `.ico`), `-TerminalZip` (use a local portable zip), `-ClaudeExe`, `-StartingDirectory`, `-SkipPlugin`.
+5. Turns on Remote Control for all sessions by setting `"remoteControlAtStartup": true` in `~/.claude/settings.json` (the same as `/config` → Enable Remote Control for all sessions). Your other settings are kept.
+
+6. Marks the starting directory as trusted in `~/.claude.json` so Claude does not show the "Quick safety check" every time (a backup is saved as `.claude.json.setup-backup`). Trusting a folder lets Claude load that folder's project settings, hooks and MCP servers, so use `-SkipTrust` if you don't want this.
+
+Options: `-IconPath` (use your own `.ico`), `-TerminalZip` (use a local portable zip), `-ClaudeExe`, `-StartingDirectory`, `-SkipPlugin`, `-SkipRemoteControl`, `-SkipTrust`.
 
 After updating the portable build, re-run `setup.ps1`.
 
