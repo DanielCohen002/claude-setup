@@ -134,6 +134,7 @@ if (-not $SkipPreferences) {
     remoteControlAtStartup = $true    # Enable Remote Control for all sessions
     awaySummaryEnabled     = $false   # Session recap off
     agentPushNotifEnabled  = $true    # Push notifications on
+    crossSessionInbound    = 'accept' # Messages from your other sessions go through without being held for approval
     attribution            = [ordered]@{ commit = ''; pr = '' }  # No Claude co-author trailer / 'Generated with Claude Code' line
   }
   $settingsFile = Join-Path $env:USERPROFILE '.claude\settings.json'

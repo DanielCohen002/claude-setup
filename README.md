@@ -35,6 +35,7 @@ Requires Windows 10/11, PowerShell 5.1+, and the `claude` CLI installed (found o
 | **Remote Control always on** | You can follow and control your sessions from your phone or another device. |
 | **Session recap off** | No automatic summary when you come back to a session. |
 | **Push notifications on** | Get a notification when Claude needs you. |
+| **Sessions can message each other** | Messages from your other sessions are accepted by default instead of being held for approval (`crossSessionInbound: accept`). |
 | **No Claude co-author** | Claude isn't added as a contributor on your commits or pull requests. |
 | **GitHub noreply email** | Your commits use your private GitHub email, not your real one. |
 | **No "Quick safety check"** | Claude stops asking whether you trust your folder every time. |
@@ -52,7 +53,7 @@ Notes:
 2. Downloads the latest portable Windows Terminal into `wt-portable\`, writes its settings (a `Claude` profile, centered launch, and the shortcuts above), and patches the exe's embedded icon (`patch-icon.ps1`).
 3. Creates the Start Menu shortcut `Claude`, which runs `launch-claude.vbs` → `launch-claude.ps1` (sets the window's icon and AppUserModelID so the taskbar groups it separately).
 4. Installs the `easy-tracking` mod from this repo, and removes the old standalone `claude-easy-tracking` one if present.
-5. Sets these Claude preferences in `~/.claude/settings.json` (your other settings are kept): `remoteControlAtStartup: true` (Remote Control for all sessions), `awaySummaryEnabled: false` (session recap off) `agentPushNotifEnabled: true` (push notifications on) and `attribution` set to empty (no Claude co-author trailer on commits, no "Generated with Claude Code" line on PRs). It also adds a marked block ("Where files go" and "Git and GitHub") to `~/.claude/CLAUDE.md` (rest of the file is left alone; re-running updates the block) so Claude saves files meant for you to look at (generated images, documents, files you asked for) in your Downloads folder, while projects stay where they normally go, and tells Claude never to add itself as a contributor or use your real email. Finally, if your global git email isn't already a GitHub noreply address, it sets it to `<id>+<login>@users.noreply.github.com` using `gh api user` (needs `gh auth login`).
+5. Sets these Claude preferences in `~/.claude/settings.json` (your other settings are kept): `remoteControlAtStartup: true` (Remote Control for all sessions), `awaySummaryEnabled: false` (session recap off) `agentPushNotifEnabled: true` (push notifications on), `crossSessionInbound: "accept"` (sessions can message each other) and `attribution` set to empty (no Claude co-author trailer on commits, no "Generated with Claude Code" line on PRs). It also adds a marked block ("Where files go" and "Git and GitHub") to `~/.claude/CLAUDE.md` (rest of the file is left alone; re-running updates the block) so Claude saves files meant for you to look at (generated images, documents, files you asked for) in your Downloads folder, while projects stay where they normally go, and tells Claude never to add itself as a contributor or use your real email. Finally, if your global git email isn't already a GitHub noreply address, it sets it to `<id>+<login>@users.noreply.github.com` using `gh api user` (needs `gh auth login`).
 6. Marks the starting folder as trusted in `~/.claude.json`. It changes only that one value, after saving a backup as `.claude.json.setup-backup`.
 
 Options:
@@ -64,7 +65,7 @@ Options:
 | `-ClaudeExe <path>` | Path to `claude.exe` if it is not found automatically. |
 | `-StartingDirectory <dir>` | Folder new Claude tabs open in (default: your user profile). |
 | `-SkipPlugin` | Don't install the easy-tracking mod. |
-| `-SkipPreferences` | Don't change the Claude preferences or the `CLAUDE.md` rules in step 5 (Remote Control, recap, push notifications, attribution, `CLAUDE.md`). |
+| `-SkipPreferences` | Don't change the Claude preferences or the `CLAUDE.md` rules in step 5 (Remote Control, recap, push notifications, session messaging, attribution, `CLAUDE.md`). |
 | `-SkipGitIdentity` | Don't set the global git email to your GitHub noreply address. |
 | `-SkipTrust` | Don't mark the starting folder as trusted. |
 
