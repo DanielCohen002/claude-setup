@@ -15,11 +15,12 @@ Usage: ./setup.sh [options]
   --skip-git-identity        Don't set the global git email to your GitHub noreply address
   --skip-trust               Don't mark the starting folder as trusted
   --skip-launcher            Don't create the "Claude" app-menu launcher
+  --skip-cursor              Don't change the GNOME Terminal cursor to a line
 EOF
 }
 
 CLAUDE_BIN=""; START_DIR="$HOME"
-SKIP_PLUGIN=0; SKIP_PREFS=0; SKIP_GIT=0; SKIP_TRUST=0; SKIP_LAUNCHER=0
+SKIP_PLUGIN=0; SKIP_PREFS=0; SKIP_GIT=0; SKIP_TRUST=0; SKIP_LAUNCHER=0; SKIP_CURSOR=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --claude) CLAUDE_BIN="$2"; shift 2 ;;
@@ -29,6 +30,7 @@ while [ $# -gt 0 ]; do
     --skip-git-identity) SKIP_GIT=1; shift ;;
     --skip-trust) SKIP_TRUST=1; shift ;;
     --skip-launcher) SKIP_LAUNCHER=1; shift ;;
+    --skip-cursor) SKIP_CURSOR=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1" >&2; usage; exit 1 ;;
   esac
@@ -164,6 +166,17 @@ Categories=Development;
 EOF
   chmod +x "$apps/claude.desktop"
   command -v update-desktop-database >/dev/null && update-desktop-database "$apps" 2>/dev/null || true
+fi
+
+# Line (I-beam) cursor instead of a block in the default GNOME Terminal profile
+if [ "$SKIP_CURSOR" = 0 ]; then
+  if command -v gsettings >/dev/null && gsettings list-schemas 2>/dev/null | grep -qx org.gnome.Terminal.ProfilesList; then
+    profile="$(gsettings get org.gnome.Terminal.ProfilesList default | tr -d "'")"
+    gsettings set "org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles:/:$profile/" cursor-shape 'ibeam' \
+      || warn "Could not set the terminal cursor shape."
+  else
+    warn "Skipped cursor shape: GNOME Terminal settings not found."
+  fi
 fi
 
 echo "Done. Open 'Claude' from your app menu (start a new Claude session for the settings to apply)."

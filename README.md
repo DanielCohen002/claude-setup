@@ -89,6 +89,7 @@ What it does, compared with `setup.ps1`:
 | --- | --- |
 | Portable Windows Terminal, centered launch, custom shortcuts | Not done. A `Claude` launcher in your app menu (`~/.local/share/applications/claude.desktop`) opens Claude in GNOME Terminal, or your default terminal. GNOME Terminal already has `Ctrl+Shift+T` (new tab) and `Ctrl+Shift+C` / `Ctrl+Shift+V` (copy / paste). |
 | Icon from `claude.exe`, own taskbar group | Not done. The launcher uses the generic terminal icon. |
+| Block cursor (Windows Terminal default) | The default GNOME Terminal profile is switched to a line (I-beam) cursor. |
 | easy-tracking mod | Same. |
 | Ding from the mod's Windows hook | The mod's ding only works on Windows, so a `Stop` hook in `~/.claude/settings.json` plays `complete.oga` with `paplay` instead (added once, not on every re-run). |
 | Preferences in `~/.claude/settings.json` | Same five settings. |
@@ -98,7 +99,7 @@ What it does, compared with `setup.ps1`:
 
 Before changing anything it copies `~/.claude/settings.json`, `~/.claude/CLAUDE.md` and `~/.claude.json` into `~/.claude/backups/claude-setup-<date>/`. Re-running is safe.
 
-Options: `--claude <path>`, `--starting-directory <dir>`, `--skip-plugin`, `--skip-preferences`, `--skip-git-identity`, `--skip-trust`, `--skip-launcher`. Run `./setup.sh --help` for details.
+Options: `--claude <path>`, `--starting-directory <dir>`, `--skip-plugin`, `--skip-preferences`, `--skip-git-identity`, `--skip-trust`, `--skip-launcher`, `--skip-cursor`. Run `./setup.sh --help` for details.
 
 ## The easy-tracking mod
 
