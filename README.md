@@ -1,6 +1,6 @@
 # claude-setup
 
-One-run setup for a nicer Claude Code experience on Windows.
+One-run setup for a nicer Claude Code experience on Windows (and Linux, see [Linux](#linux)).
 
 > Unofficial. Not affiliated with or endorsed by Anthropic or Microsoft. This repo contains **no** Anthropic artwork and **no** Windows Terminal binaries: the icon is extracted from your own installed `claude.exe` at setup time (or you supply your own `.ico`), and Windows Terminal is downloaded from Microsoft's official GitHub releases.
 
@@ -70,6 +70,35 @@ Options:
 | `-SkipTrust` | Don't mark the starting folder as trusted. |
 
 After updating the portable terminal build, re-run `setup.ps1`.
+
+## Linux
+
+`setup.sh` is the Linux version (tested on Linux Mint 22.3). The Windows files are unchanged.
+
+```bash
+git clone https://github.com/DanielCohen002/claude-setup
+cd claude-setup
+./setup.sh
+```
+
+Requires `python3` and the `claude` CLI (on your PATH or at `~/.local/bin/claude`). For the git noreply email, also install `git` and `gh` (`sudo apt install git gh`) and run `gh auth login` first.
+
+What it does, compared with `setup.ps1`:
+
+| `setup.ps1` (Windows) | `setup.sh` (Linux) |
+| --- | --- |
+| Portable Windows Terminal, centered launch, custom shortcuts | Not done. A `Claude` launcher in your app menu (`~/.local/share/applications/claude.desktop`) opens Claude in GNOME Terminal, or your default terminal. GNOME Terminal already has `Ctrl+Shift+T` (new tab) and `Ctrl+Shift+C` / `Ctrl+Shift+V` (copy / paste). |
+| Icon from `claude.exe`, own taskbar group | Not done. The launcher uses the generic terminal icon. |
+| easy-tracking mod | Same. |
+| Ding from the mod's Windows hook | The mod's ding only works on Windows, so a `Stop` hook in `~/.claude/settings.json` plays `complete.oga` with `paplay` instead (added once, not on every re-run). |
+| Preferences in `~/.claude/settings.json` | Same five settings. |
+| `CLAUDE.md` block | Same block, with your Downloads folder from `xdg-user-dir`. |
+| Git noreply email | Same, via `gh api user`. |
+| Trust the starting folder in `~/.claude.json` | Same. |
+
+Before changing anything it copies `~/.claude/settings.json`, `~/.claude/CLAUDE.md` and `~/.claude.json` into `~/.claude/backups/claude-setup-<date>/`. Re-running is safe.
+
+Options: `--claude <path>`, `--starting-directory <dir>`, `--skip-plugin`, `--skip-preferences`, `--skip-git-identity`, `--skip-trust`, `--skip-launcher`. Run `./setup.sh --help` for details.
 
 ## The easy-tracking mod
 
