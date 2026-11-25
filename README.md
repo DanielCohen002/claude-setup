@@ -2,6 +2,8 @@
 
 One-run setup for a nicer Claude Code experience on Windows.
 
+On Linux, use `setup.sh` instead (see [Linux](#linux)).
+
 > Unofficial. Not affiliated with or endorsed by Anthropic or Microsoft. This repo contains **no** Anthropic artwork and **no** Windows Terminal binaries: the icon is extracted from your own installed `claude.exe` at setup time (or you supply your own `.ico`), and Windows Terminal is downloaded from Microsoft's official GitHub releases.
 
 ## Install
@@ -70,6 +72,38 @@ Options:
 | `-SkipTrust` | Don't mark the starting folder as trusted. |
 
 After updating the portable terminal build, re-run `setup.ps1`.
+
+## Linux
+
+`setup.sh` is the Linux version (tested on Linux Mint 22.3). The Windows files are unchanged.
+
+```bash
+git clone https://github.com/DanielCohen002/claude-setup
+cd claude-setup
+./setup.sh
+```
+
+Requires `python3` and the `claude` CLI (on your PATH or at `~/.local/bin/claude`). For the git noreply email, also install `git` and `gh` (`sudo apt install git gh`) and run `gh auth login` first.
+
+What it does, compared with `setup.ps1`:
+
+| `setup.ps1` (Windows) | `setup.sh` (Linux) |
+| --- | --- |
+| Portable Windows Terminal, centered launch, custom shortcuts | Not done. A `Claude` launcher in your app menu (`~/.local/share/applications/claude.desktop`) opens Claude in GNOME Terminal, or your default terminal. GNOME Terminal already has `Ctrl+Shift+T` (new tab) and `Ctrl+Shift+C` / `Ctrl+Shift+V` (copy / paste). |
+| Icon from `claude.exe`, own taskbar group | Not done. The launcher uses the generic terminal icon. |
+| Block cursor (Windows Terminal default) | The default GNOME Terminal profile is switched to a line (I-beam) cursor. |
+| easy-tracking mod | Same. |
+| Ding from the mod's Windows hook | The mod's ding only works on Windows, so a `Stop` hook in `~/.claude/settings.json` plays `complete.oga` with `paplay` instead (added once, not on every re-run). |
+| Preferences in `~/.claude/settings.json` | Same five settings. |
+| `CLAUDE.md` block | Same block, with your Downloads folder from `xdg-user-dir`. |
+| Git noreply email | Same, via `gh api user`. |
+| Trust the starting folder in `~/.claude.json` | Same. |
+
+**Keyring popups (opt-in, `--blank-keyring`).** With autologin you never type your password, so the GNOME login keyring stays locked, and `gh` (and `git push` through it) shows an unlock popup every time it runs. If you've forgotten the password, there's nothing you can type. `--blank-keyring` moves the locked keyring to `~/.local/share/keyrings-backup-<date>/` and replaces it with one that has no password, so it never asks, the way Windows unlocks its credential store at login. Passwords saved in the old keyring are no longer available, and anything saved from now on is stored unencrypted in your home folder. It does nothing if the keyring already has no password. Forgot your login password itself? If your account has passwordless `sudo`, run `sudo passwd $USER` to set a new one.
+
+Before changing anything it copies `~/.claude/settings.json`, `~/.claude/CLAUDE.md` and `~/.claude.json` into `~/.claude/backups/claude-setup-<date>/`. Re-running is safe.
+
+Options: `--claude <path>`, `--starting-directory <dir>`, `--skip-plugin`, `--skip-preferences`, `--skip-git-identity`, `--skip-trust`, `--skip-launcher`, `--skip-cursor`, `--blank-keyring`. Run `./setup.sh --help` for details.
 
 ## The easy-tracking mod
 
