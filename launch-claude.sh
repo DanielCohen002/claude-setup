@@ -15,7 +15,7 @@ before="$(list_windows)"
 # (or starts it through the D-Bus service file setup.sh installs).
 GT=gnome-terminal
 [ -x /usr/bin/gnome-terminal.real ] && GT=/usr/bin/gnome-terminal.real
-"$GT" --app-id "$APP_ID" --title=Claude --working-directory="$START_DIR" -- "$CLAUDE_BIN" || exit 1
+"$GT" --app-id "$APP_ID" --geometry=102x33 --title=Claude--working-directory="$START_DIR" -- "$CLAUDE_BIN" || exit 1
 
 # Centering needs wmctrl (sudo apt install wmctrl); without it the window just opens where the desktop puts it
 command -v wmctrl >/dev/null || exit 0
