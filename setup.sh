@@ -10,6 +10,7 @@ usage() {
 Usage: ./setup.sh [options]
   --claude <path>            Path to the claude binary (default: found on PATH or ~/.local/bin/claude)
   --starting-directory <dir> Folder the launcher opens Claude in (default: $HOME)
+  --icon <file.png>          Use your own icon instead of downloading Claude's from claude.ai
   --skip-plugin              Don't install the easy-tracking mod
   --skip-preferences         Don't change Claude preferences, the ding hook or the CLAUDE.md rules
   --skip-git-identity        Don't set the global git email to your GitHub noreply address
@@ -24,12 +25,13 @@ Usage: ./setup.sh [options]
 EOF
 }
 
-CLAUDE_BIN=""; START_DIR="$HOME"
+CLAUDE_BIN=""; START_DIR="$HOME"; ICON_PATH=""
 SKIP_PLUGIN=0; SKIP_PREFS=0; SKIP_GIT=0; SKIP_TRUST=0; SKIP_LAUNCHER=0; SKIP_CURSOR=0; BLANK_KEYRING=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --claude) CLAUDE_BIN="$2"; shift 2 ;;
     --starting-directory) START_DIR="$2"; shift 2 ;;
+    --icon) ICON_PATH="$2"; shift 2 ;;
     --skip-plugin) SKIP_PLUGIN=1; shift ;;
     --skip-preferences) SKIP_PREFS=1; shift ;;
     --skip-git-identity) SKIP_GIT=1; shift ;;
@@ -152,25 +154,45 @@ if proj.get("hasTrustDialogAccepted") is not True:
 EOF
 fi
 
-# "Claude" app-menu launcher (GNOME Terminal if present, else the system default terminal)
+# "Claude" app-menu launcher with Claude's icon and its own taskbar entry.
+# The icon is not shipped in this repo: it is downloaded from claude.ai at setup time (or use --icon).
+# GNOME Terminal runs under its own app id (org.claude.Terminal) so the taskbar shows Claude separately.
 if [ "$SKIP_LAUNCHER" = 0 ]; then
-  apps="$HOME/.local/share/applications"; mkdir -p "$apps"
-  if command -v gnome-terminal >/dev/null; then
-    exec_line="gnome-terminal --title=Claude --working-directory=\"$START_DIR\" -- \"$CLAUDE_BIN\""
+  APP_ID="org.claude.Terminal"
+  apps="$HOME/.local/share/applications"; icons="$HOME/.local/share/icons"
+  mkdir -p "$apps" "$icons"
+  icon="$icons/claude-code.png"
+  if [ -n "$ICON_PATH" ]; then
+    [ -f "$ICON_PATH" ] || { echo "Icon not found: $ICON_PATH" >&2; exit 1; }
+    cp "$ICON_PATH" "$icon"
+  elif ! curl -fsSL -A "Mozilla/5.0" -o "$icon.tmp" https://claude.ai/apple-touch-icon.png \
+       || ! head -c 8 "$icon.tmp" | grep -q PNG; then
+    rm -f "$icon.tmp"
+    [ -f "$icon" ] || { warn "Could not download Claude's icon; using the terminal icon. Pass --icon to use your own."; icon="utilities-terminal"; }
+  else
+    mv "$icon.tmp" "$icon"
+  fi
+  rm -f "$apps/claude.desktop"   # launcher name used by older versions of this script
+  if command -v gnome-terminal >/dev/null && [ -x /usr/libexec/gnome-terminal-server ]; then
+    mkdir -p "$HOME/.local/share/dbus-1/services"
+    printf '[D-BUS Service]\nName=%s\nExec=/usr/libexec/gnome-terminal-server --app-id %s\n' "$APP_ID" "$APP_ID" \
+      > "$HOME/.local/share/dbus-1/services/$APP_ID.service"
+    busctl --user call org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus ReloadConfig >/dev/null 2>&1 || true
+    exec_line="gnome-terminal --app-id $APP_ID --title=Claude --working-directory=\"$START_DIR\" -- \"$CLAUDE_BIN\""
   else
     exec_line="x-terminal-emulator -e sh -c 'cd \"$START_DIR\" && exec \"$CLAUDE_BIN\"'"
   fi
-  cat > "$apps/claude.desktop" <<EOF
+  cat > "$apps/$APP_ID.desktop" <<EOF
 [Desktop Entry]
 Type=Application
 Name=Claude
 Comment=Claude Code in a terminal
 Exec=$exec_line
-Icon=utilities-terminal
+Icon=$icon
 Terminal=false
 Categories=Development;
 EOF
-  chmod +x "$apps/claude.desktop"
+  chmod +x "$apps/$APP_ID.desktop"
   command -v update-desktop-database >/dev/null && update-desktop-database "$apps" 2>/dev/null || true
 fi
 
