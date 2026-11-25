@@ -97,9 +97,11 @@ What it does, compared with `setup.ps1`:
 | Git noreply email | Same, via `gh api user`. |
 | Trust the starting folder in `~/.claude.json` | Same. |
 
+**Keyring popups (opt-in, `--blank-keyring`).** With autologin you never type your password, so the GNOME login keyring stays locked, and `gh` (and `git push` through it) shows an unlock popup every time it runs. If you've forgotten the password, there's nothing you can type. `--blank-keyring` moves the locked keyring to `~/.local/share/keyrings-backup-<date>/` and replaces it with one that has no password, so it never asks, the way Windows unlocks its credential store at login. Passwords saved in the old keyring are no longer available, and anything saved from now on is stored unencrypted in your home folder. It does nothing if the keyring already has no password. Forgot your login password itself? If your account has passwordless `sudo`, run `sudo passwd $USER` to set a new one.
+
 Before changing anything it copies `~/.claude/settings.json`, `~/.claude/CLAUDE.md` and `~/.claude.json` into `~/.claude/backups/claude-setup-<date>/`. Re-running is safe.
 
-Options: `--claude <path>`, `--starting-directory <dir>`, `--skip-plugin`, `--skip-preferences`, `--skip-git-identity`, `--skip-trust`, `--skip-launcher`, `--skip-cursor`. Run `./setup.sh --help` for details.
+Options: `--claude <path>`, `--starting-directory <dir>`, `--skip-plugin`, `--skip-preferences`, `--skip-git-identity`, `--skip-trust`, `--skip-launcher`, `--skip-cursor`, `--blank-keyring`. Run `./setup.sh --help` for details.
 
 ## The easy-tracking mod
 

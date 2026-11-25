@@ -16,11 +16,16 @@ Usage: ./setup.sh [options]
   --skip-trust               Don't mark the starting folder as trusted
   --skip-launcher            Don't create the "Claude" app-menu launcher
   --skip-cursor              Don't change the GNOME Terminal cursor to a line
+  --blank-keyring            Opt-in: replace a locked login keyring with one that has no password,
+                             so gh/git (and other apps) stop showing unlock popups. Useful with
+                             autologin. The old keyring is moved to a backup, not deleted, but
+                             passwords saved in it are no longer available, and new ones are
+                             stored unencrypted.
 EOF
 }
 
 CLAUDE_BIN=""; START_DIR="$HOME"
-SKIP_PLUGIN=0; SKIP_PREFS=0; SKIP_GIT=0; SKIP_TRUST=0; SKIP_LAUNCHER=0; SKIP_CURSOR=0
+SKIP_PLUGIN=0; SKIP_PREFS=0; SKIP_GIT=0; SKIP_TRUST=0; SKIP_LAUNCHER=0; SKIP_CURSOR=0; BLANK_KEYRING=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --claude) CLAUDE_BIN="$2"; shift 2 ;;
@@ -31,6 +36,7 @@ while [ $# -gt 0 ]; do
     --skip-trust) SKIP_TRUST=1; shift ;;
     --skip-launcher) SKIP_LAUNCHER=1; shift ;;
     --skip-cursor) SKIP_CURSOR=1; shift ;;
+    --blank-keyring) BLANK_KEYRING=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1" >&2; usage; exit 1 ;;
   esac
@@ -176,6 +182,30 @@ if [ "$SKIP_CURSOR" = 0 ]; then
       || warn "Could not set the terminal cursor shape."
   else
     warn "Skipped cursor shape: GNOME Terminal settings not found."
+  fi
+fi
+
+# Opt-in: password-less login keyring (no unlock popups, like Windows' credential store after login)
+if [ "$BLANK_KEYRING" = 1 ]; then
+  K="$HOME/.local/share/keyrings"
+  if [ -f "$K/login.keyring" ] && ! head -c 12 "$K/login.keyring" | grep -q GnomeKeyring; then
+    echo "Login keyring already has no password; leaving it alone."
+  elif ! systemctl --user cat gnome-keyring-daemon.service >/dev/null 2>&1; then
+    warn "Skipped blank keyring: gnome-keyring-daemon is not a systemd user service here."
+  else
+    KB="$HOME/.local/share/keyrings-backup-$(date +%Y%m%d-%H%M%S)"
+    mkdir -p -m 700 "$KB" "$K"
+    systemctl --user stop gnome-keyring-daemon.service gnome-keyring-daemon.socket 2>/dev/null || true
+    [ -f "$K/login.keyring" ] && mv "$K/login.keyring" "$KB/"
+    [ -f "$K/default" ] && cp -p "$K/default" "$KB/"
+    printf '[keyring]\ndisplay-name=Login\nctime=0\nmtime=0\nlock-on-idle=false\nlock-after=false\n' > "$K/login.keyring"
+    printf 'login' > "$K/default"
+    chmod 600 "$K/login.keyring" "$K/default"
+    systemctl --user start gnome-keyring-daemon.service || warn "Could not restart the keyring; log out and back in."
+    sleep 1
+    busctl --user call org.freedesktop.secrets /org/freedesktop/secrets org.freedesktop.Secret.Service \
+      Unlock ao 1 /org/freedesktop/secrets/collection/login >/dev/null 2>&1 || true
+    echo "Login keyring now has no password. Old keyring saved in $KB"
   fi
 fi
 
