@@ -17,6 +17,7 @@ Usage: ./setup.sh [options]
   --skip-trust               Don't mark the starting folder as trusted
   --skip-launcher            Don't create the "Claude" app-menu launcher
   --skip-cursor              Don't change the GNOME Terminal cursor to a line
+  --skip-shift-enter         Don't make Shift+Enter insert a new line in GNOME Terminal
   --blank-keyring            Opt-in: replace a locked login keyring with one that has no password,
                              so gh/git (and other apps) stop showing unlock popups. Useful with
                              autologin. The old keyring is moved to a backup, not deleted, but
@@ -26,7 +27,7 @@ EOF
 }
 
 CLAUDE_BIN=""; START_DIR="$HOME"; ICON_PATH=""
-SKIP_PLUGIN=0; SKIP_PREFS=0; SKIP_GIT=0; SKIP_TRUST=0; SKIP_LAUNCHER=0; SKIP_CURSOR=0; BLANK_KEYRING=0
+SKIP_PLUGIN=0; SKIP_PREFS=0; SKIP_GIT=0; SKIP_TRUST=0; SKIP_LAUNCHER=0; SKIP_CURSOR=0; SKIP_SHIFT=0; BLANK_KEYRING=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --claude) CLAUDE_BIN="$2"; shift 2 ;;
@@ -38,6 +39,7 @@ while [ $# -gt 0 ]; do
     --skip-trust) SKIP_TRUST=1; shift ;;
     --skip-launcher) SKIP_LAUNCHER=1; shift ;;
     --skip-cursor) SKIP_CURSOR=1; shift ;;
+    --skip-shift-enter) SKIP_SHIFT=1; shift ;;
     --blank-keyring) BLANK_KEYRING=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown option: $1" >&2; usage; exit 1 ;;
@@ -215,6 +217,31 @@ if [ "$SKIP_CURSOR" = 0 ]; then
       || warn "Could not set the terminal cursor shape."
   else
     warn "Skipped cursor shape: GNOME Terminal settings not found."
+  fi
+fi
+
+# Shift+Enter = new line in Claude (GNOME Terminal can't tell it apart from Enter, so a small
+# X11 helper sends Ctrl+J while the terminal is focused). Needs xbindkeys, xdotool and xprop.
+if [ "$SKIP_SHIFT" = 0 ]; then
+  if [ "${XDG_SESSION_TYPE:-x11}" != "x11" ]; then
+    warn "Skipped Shift+Enter: needs an X11 session (you are on ${XDG_SESSION_TYPE})."
+  elif ! command -v xbindkeys >/dev/null || ! command -v xdotool >/dev/null || ! command -v xprop >/dev/null; then
+    warn "Skipped Shift+Enter: install xbindkeys, xdotool and x11-utils (sudo apt install xbindkeys xdotool x11-utils), then re-run."
+  else
+    helper_dir="$HOME/.local/share/claude-setup"
+    mkdir -p "$helper_dir" "$HOME/.config/autostart"
+    cp "$ROOT/shift-enter-terminal.sh" "$helper_dir/shift-enter-terminal.sh"
+    chmod +x "$helper_dir/shift-enter-terminal.sh"
+    cat > "$HOME/.config/autostart/claude-shift-enter.desktop" <<EOF2
+[Desktop Entry]
+Type=Application
+Name=Shift+Enter new line in terminal
+Exec=$helper_dir/shift-enter-terminal.sh
+NoDisplay=true
+EOF2
+    pkill -f "$helper_dir/shift-enter-terminal.sh" 2>/dev/null || true
+    (setsid nohup "$helper_dir/shift-enter-terminal.sh" >/dev/null 2>&1 &)
+    echo "Shift+Enter now inserts a new line in GNOME Terminal."
   fi
 fi
 
