@@ -89,11 +89,11 @@ What it does, compared with `setup.ps1`:
 
 | `setup.ps1` (Windows) | `setup.sh` (Linux) |
 | --- | --- |
-| Portable Windows Terminal, centered launch, custom shortcuts | Not done. A `Claude` launcher in your app menu (`~/.local/share/applications/org.claude.Terminal.desktop`) opens Claude in GNOME Terminal, or your default terminal. GNOME Terminal already has `Ctrl+Shift+T` (new tab) and `Ctrl+Shift+C` / `Ctrl+Shift+V` (copy / paste). |
+| Portable Windows Terminal, centered launch, custom shortcuts | A `Claude` launcher in your app menu (`~/.local/share/applications/org.claude.Terminal.desktop`) runs `launch-claude.sh`, which opens Claude in GNOME Terminal and centers the window on the monitor your mouse is on (needs `wmctrl`: `sudo apt install wmctrl`). Without GNOME Terminal it uses your default terminal, not centered. The custom shortcuts are not ported. GNOME Terminal already has `Ctrl+Shift+T` (new tab) and `Ctrl+Shift+C` / `Ctrl+Shift+V` (copy / paste). |
 | Icon from `claude.exe`, own taskbar group | There is no `claude.exe` on Linux, so Claude's icon is downloaded from claude.ai at setup time (not stored in this repo), or use your own with `--icon <file.png>`. GNOME Terminal runs under its own app id (`org.claude.Terminal`, via a D-Bus service file in `~/.local/share/dbus-1/services/`), so Claude gets its own taskbar icon, separate from your other terminals. |
 | Block cursor (Windows Terminal default) | The default GNOME Terminal profile is switched to a line (I-beam) cursor. |
 | easy-tracking mod | Same. |
-| Ding from the mod's Windows hook | The mod's ding only works on Windows, so a `Stop` hook in `~/.claude/settings.json` plays `complete.oga` with `paplay` instead (added once, not on every re-run). |
+| Ding from the mod's Windows hook | The mod's ding only works on Windows, so a `Stop` hook in `~/.claude/settings.json` plays `complete.oga` with `paplay` instead, at 65% volume (added once; re-running updates it instead of adding another). |
 | Preferences in `~/.claude/settings.json` | Same five settings. |
 | `CLAUDE.md` block | Same block, with your Downloads folder from `xdg-user-dir`. |
 | Git noreply email | Same, via `gh api user`. |

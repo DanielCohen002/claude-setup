@@ -45,6 +45,7 @@ while [ $# -gt 0 ]; do
 done
 
 warn() { echo "WARNING: $*" >&2; }
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 command -v python3 >/dev/null || { echo "python3 is required." >&2; exit 1; }
 if [ -z "$CLAUDE_BIN" ]; then
@@ -84,9 +85,16 @@ if os.path.exists(p):
         s = json.load(f) or {}
 s.update({"remoteControlAtStartup": True, "awaySummaryEnabled": False, "agentPushNotifEnabled": True,
           "crossSessionInbound": "accept", "attribution": {"commit": "", "pr": ""}})
-ding = "paplay /usr/share/sounds/freedesktop/stereo/complete.oga >/dev/null 2>&1 || true"
+# 65% volume (65536 = 100%)
+ding = "paplay --volume=42598 /usr/share/sounds/freedesktop/stereo/complete.oga >/dev/null 2>&1 || true"
 stop = s.setdefault("hooks", {}).setdefault("Stop", [])
-if not any(h.get("command") == ding for g in stop for h in g.get("hooks", [])):
+found = False
+for g in stop:
+    for h in g.get("hooks", []):
+        if "freedesktop/stereo/complete.oga" in h.get("command", ""):
+            h["command"] = ding  # update a ding added by an earlier run instead of adding a second one
+            found = True
+if not found:
     stop.append({"hooks": [{"type": "command", "command": ding, "async": True}]})
 os.makedirs(os.path.dirname(p), exist_ok=True)
 with open(p, "w") as f:
@@ -178,7 +186,10 @@ if [ "$SKIP_LAUNCHER" = 0 ]; then
     printf '[D-BUS Service]\nName=%s\nExec=/usr/libexec/gnome-terminal-server --app-id %s\n' "$APP_ID" "$APP_ID" \
       > "$HOME/.local/share/dbus-1/services/$APP_ID.service"
     busctl --user call org.freedesktop.DBus /org/freedesktop/DBus org.freedesktop.DBus ReloadConfig >/dev/null 2>&1 || true
-    exec_line="gnome-terminal --app-id $APP_ID --title=Claude --working-directory=\"$START_DIR\" -- \"$CLAUDE_BIN\""
+    # launch-claude.sh opens the window and centers it (needs wmctrl)
+    chmod +x "$ROOT/launch-claude.sh"
+    exec_line="\"$ROOT/launch-claude.sh\" \"$START_DIR\" \"$CLAUDE_BIN\""
+    command -v wmctrl >/dev/null || warn "wmctrl not installed, so Claude won't open centered (sudo apt install wmctrl)."
   else
     exec_line="x-terminal-emulator -e sh -c 'cd \"$START_DIR\" && exec \"$CLAUDE_BIN\"'"
   fi
