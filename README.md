@@ -1,6 +1,8 @@
 # claude-setup
 
-One-run setup for a nicer Claude Code experience on Windows (and Linux, see [Linux](#linux)).
+One-run setup for a nicer Claude Code experience on Windows.
+
+On Linux, use `setup.sh` instead (see [Linux](#linux)).
 
 > Unofficial. Not affiliated with or endorsed by Anthropic or Microsoft. This repo contains **no** Anthropic artwork and **no** Windows Terminal binaries: the icon is extracted from your own installed `claude.exe` at setup time (or you supply your own `.ico`), and Windows Terminal is downloaded from Microsoft's official GitHub releases.
 
